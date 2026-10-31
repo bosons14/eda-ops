@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-import shutil
 import re
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -107,8 +107,8 @@ def synth(files: list[str], top: str, liberty: str | None = None, flatten: bool 
 
 # ----------------------------------------------------------------------------- simulation
 
-_PASS = re.compile(r"\b(TEST\s+PASS(ED)?|ALL TESTS PASSED|\bPASS(ED)?\b)", re.I)
-_FAIL = re.compile(r"\b(FAIL(ED|URE)?|MISMATCH|ASSERTION|\$fatal|Error:|UVM_ERROR\s*:\s*[1-9]|UVM_FATAL\s*:\s*[1-9])", re.I)
+_PASS = re.compile(r"\b(TEST\s+PASS(ED)?|ALL TESTS PASSED|\bPASS(ED)?\b)", re.IGNORECASE)
+_FAIL = re.compile(r"\b(FAIL(ED|URE)?|MISMATCH|ASSERTION|\$fatal|Error:|UVM_ERROR\s*:\s*[1-9]|UVM_FATAL\s*:\s*[1-9])", re.IGNORECASE)
 
 
 def simulate(files: list[str], top: str, tool: str = "auto", defines: list[str] | None = None,
@@ -181,8 +181,8 @@ def run_sta(netlist: str, top: str, liberty: list[str], sdc: str, spef: str | No
     if spef:
         tcl.append(f"read_spef {{{spef}}}")
     tcl += [
-        f"report_checks -path_delay max -group_path_count {group_count} -fields {{slew cap input fanout}} "
-        f"-digits 4 > {{{rpt}}}",
+        (f"report_checks -path_delay max -group_path_count {group_count} -fields {{slew cap input fanout}} "
+         f"-digits 4 > {{{rpt}}}"),
         f"report_checks -path_delay min -group_path_count {group_count} -digits 4 >> {{{rpt}}}",
         f"report_checks -unconstrained -group_path_count 5 >> {{{work / 'unconstrained.rpt'}}}",
         "report_wns", "report_tns",

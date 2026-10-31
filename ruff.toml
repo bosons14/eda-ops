@@ -1,0 +1,7 @@
+# Lint with ruff's 0.17+ default rule set. Older ruff has different defaults
+# (e.g. E402 is on there, so the sys.path-then-import pattern in eda_mcp.py and
+# the tests would be flagged), so require a version that matches.
+required-version = ">=0.17"
+
+# run.sh requires Python 3.10+.
+target-version = "py310"

@@ -38,14 +38,14 @@ _PATTERNS: list[tuple[re.Pattern, str]] = [
 ]
 
 _FATAL_SIGNS = [
-    (re.compile(r"segmentation fault|sigsegv|core dumped", re.I), "Tool crashed (segfault)."),
-    (re.compile(r"out of memory|std::bad_alloc|cannot allocate memory|memory exhausted", re.I), "Ran out of memory."),
-    (re.compile(r"^\s*Killed\s*$|oom-killer", re.I), "Process killed (likely OOM killer)."),
-    (re.compile(r"licen[cs]e.*(fail|unavailable|denied|not available|checkout)", re.I), "License checkout problem."),
-    (re.compile(r"\babort(ed)?\b|internal error|assertion .* failed", re.I), "Tool internal error/abort."),
-    (re.compile(r"timing (is )?not met|negative slack|failed to meet the timing", re.I), "Tool reports timing not met."),
-    (re.compile(r"^\w+ failed\b|^Command failed|exited with errors|errors? encountered", re.I), "A tool command failed."),
-    (re.compile(r"no space left on device|disk quota", re.I), "Disk full."),
+    (re.compile(r"segmentation fault|sigsegv|core dumped", re.IGNORECASE), "Tool crashed (segfault)."),
+    (re.compile(r"out of memory|std::bad_alloc|cannot allocate memory|memory exhausted", re.IGNORECASE), "Ran out of memory."),
+    (re.compile(r"^\s*Killed\s*$|oom-killer", re.IGNORECASE), "Process killed (likely OOM killer)."),
+    (re.compile(r"licen[cs]e.*(fail|unavailable|denied|not available|checkout)", re.IGNORECASE), "License checkout problem."),
+    (re.compile(r"\babort(ed)?\b|internal error|assertion .* failed", re.IGNORECASE), "Tool internal error/abort."),
+    (re.compile(r"timing (is )?not met|negative slack|failed to meet the timing", re.IGNORECASE), "Tool reports timing not met."),
+    (re.compile(r"^\w+ failed\b|^Command failed|exited with errors|errors? encountered", re.IGNORECASE), "A tool command failed."),
+    (re.compile(r"no space left on device|disk quota", re.IGNORECASE), "Disk full."),
 ]
 
 _NORMALISE = [
@@ -89,7 +89,7 @@ def triage(path: str, max_groups: int = 40, include_info: bool = False, tail_lin
     p = Path(path)
     if not p.exists():
         return {"ok": False, "error": f"File not found: {path}"}
-    groups: "OrderedDict[tuple, dict]" = OrderedDict()
+    groups: OrderedDict[tuple, dict] = OrderedDict()
     tail: deque[str] = deque(maxlen=tail_lines)
     before: deque[str] = deque(maxlen=context)
     families: dict[str, int] = {}

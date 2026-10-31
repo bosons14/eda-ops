@@ -13,11 +13,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 try:  # mcp >= 2.0
-    from mcp.server.mcpserver import MCPServer as FastMCP  # noqa: E402
+    from mcp.server.mcpserver import MCPServer as FastMCP
 except ImportError:  # mcp 1.x
-    from mcp.server.fastmcp import FastMCP  # noqa: E402
+    from mcp.server.fastmcp import FastMCP
 
-from edaops import __version__, flows, lint, logs, runner, sdc, timing  # noqa: E402
+from edaops import __version__, flows, lint, logs, runner, sdc, timing
 
 mcp = FastMCP("eda-ops")
 

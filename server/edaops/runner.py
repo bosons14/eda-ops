@@ -52,7 +52,7 @@ def run(cmd: list[str], cwd: str | Path | None = None, timeout: int = 600,
         stdin: str | None = None) -> dict:
     try:
         proc = subprocess.run(
-            cmd, cwd=cwd, input=stdin, capture_output=True, text=True,
+            cmd, check=False, cwd=cwd, input=stdin, capture_output=True, text=True,
             timeout=timeout, errors="replace",
         )
         return {"cmd": cmd, "returncode": proc.returncode,
