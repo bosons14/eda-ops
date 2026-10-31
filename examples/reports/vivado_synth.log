@@ -1,0 +1,14 @@
+****** Vivado v2024.2 (64-bit)
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
+INFO: [Synth 8-6157] synthesizing module 'top' [/proj/rtl/top.sv:3]
+WARNING: [Synth 8-327] inferring latch for variable 'r_reg' [/proj/rtl/alu.sv:13]
+WARNING: [Synth 8-7129] Port dbg[3] in module core is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dbg[2] in module core is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dbg[1] in module core is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dbg[0] in module core is either unconnected or has no load
+WARNING: [Synth 8-3332] Sequential element (u_core/old_reg) is unused and will be removed from module top.
+CRITICAL WARNING: [Constraints 18-512] set_false_path: No valid object(s) found for '-to [get_ports *]'. [/proj/xdc/top.xdc:12]
+CRITICAL WARNING: [Timing 38-282] The design failed to meet the timing requirements. Please see the timing summary report for details on the timing violations.
+ERROR: [DRC NSTD-1] Unspecified I/O Standard: 3 out of 40 logical ports use I/O standard (IOSTANDARD) value 'DEFAULT', instead of a user assigned specific value.
+INFO: [Common 17-83] Releasing license: Synthesis
+synth_design failed
