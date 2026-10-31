@@ -32,8 +32,13 @@ VPY="$VENV/bin/python"
 [ -x "$VENV/Scripts/python.exe" ] && VPY="$VENV/Scripts/python.exe"
 if [ ! -x "$VPY" ] || ! "$VPY" -c "import mcp" >/dev/null 2>&1; then
   log "first run: creating $VENV and installing the 'mcp' package (one time, about 30 s)"
-  "$PY" -m venv "$VENV" >&2 || { log "python -m venv failed (Ubuntu/Debian: sudo apt install python3-venv)"; exit 1; }
+  rm -rf "$VENV"  # never build on top of a half-created venv from an earlier failed attempt
+  "$PY" -m venv "$VENV" >&2 || {
+    rm -rf "$VENV"
+    log "python -m venv failed. Ubuntu/Debian: sudo apt install python3-venv (or python3.X-venv). Or install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1; }
   VPY="$VENV/bin/python"; [ -x "$VENV/Scripts/python.exe" ] && VPY="$VENV/Scripts/python.exe"
-  "$VPY" -m pip install -q --disable-pip-version-check "mcp>=1.2,<3" >&2 || { log "pip install mcp failed (offline or proxy?)"; exit 1; }
+  "$VPY" -m pip install -q --disable-pip-version-check "mcp>=1.2,<3" >&2 || {
+    rm -rf "$VENV"; log "pip install mcp failed (offline or behind a proxy?)"; exit 1; }
 fi
 exec "$VPY" "$SERVER"
