@@ -38,8 +38,7 @@ multi-corner root-causing).
 
 ## Setup
 
-You need Python 3.10+, and either [uv](https://docs.astral.sh/uv/) (recommended: no manual installs) or
-`pip install "mcp>=1.2,<3"`.
+You need Python 3.10+. Nothing else is required: if [uv](https://docs.astral.sh/uv/) is installed the server runs through it, otherwise the first launch creates a private virtual environment (`~/.cache/eda-ops/venv`) and installs the `mcp` package into it automatically (about 30 s, one time).
 
 The EDA tools are optional. Each feature uses whatever is installed, and the parsers (timing, logs, SDC)
 need no tools at all:
@@ -75,6 +74,11 @@ and ask:
 - "Review examples/constraints/top.sdc"
 - "Why did examples/reports/vivado_synth.log fail?"
 - "Is the CDC in examples/rtl/cdc_bad.sv safe?"
+
+## Troubleshooting
+
+- **`Failed to reconnect to eda-ops: CONNECTION_CLOSED`**: run `sh ~/.claude/plugins/cache/eda-ops/eda-ops/*/server/run.sh < /dev/null` in a terminal and read the `eda-ops:` message it prints. The usual causes are no Python 3.10+, or `python3-venv` missing on Ubuntu (`sudo apt install python3-venv`).
+- **Native Windows**: use WSL2. The launcher is a POSIX shell script.
 
 ## Development
 
