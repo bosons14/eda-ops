@@ -1,6 +1,15 @@
 name: tests
 on: [push, pull_request]
 jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      # Pin the minor version: ruff changes its default rules between minors.
+      - run: pip install "ruff>=0.17,<0.18"
+      - run: ruff check --output-format=github .
   test:
     runs-on: ubuntu-24.04
     steps:
