@@ -14,7 +14,7 @@ _VERILATOR = re.compile(
     r"(?:(?P<file>[^:\s][^:]*?):(?P<line>\d+):(?:(?P<col>\d+):)?\s*)?(?P<msg>.*)$"
 )
 # x.v:12: error: Unknown module type: foo
-_ICARUS = re.compile(r"^(?P<file>[^:\s][^:]*?):(?P<line>\d+):\s*(?P<sev>error|warning|sorry):\s*(?P<msg>.*)$", re.I)
+_ICARUS = re.compile(r"^(?P<file>[^:\s][^:]*?):(?P<line>\d+):\s*(?P<sev>error|warning|sorry):\s*(?P<msg>.*)$", re.IGNORECASE)
 # file.sv:3:5-10: message [Style: x] [rule-name]
 _VERIBLE = re.compile(r"^(?P<file>[^:\s][^:]*?):(?P<line>\d+):(?P<col>\d+)(?:-\d+)?:\s*(?P<msg>.*?)(?:\s*\[(?P<code>[a-z0-9-]+)\])?$")
 

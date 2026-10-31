@@ -12,7 +12,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "server"))
 
-from edaops import flows, lint, logs, runner, sdc, timing  # noqa: E402
+from edaops import flows, lint, logs, runner, sdc, timing
 
 EX = ROOT / "examples"
 

@@ -46,13 +46,13 @@ def main() -> int:
     else:
         return 0
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=45, errors="replace")
+        proc = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=45, errors="replace")
     except (subprocess.TimeoutExpired, OSError):
         return 0
     if verilator and "Invalid option: --timing" in proc.stderr:  # Verilator 4.x
         cmd.remove("--timing")
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=45, errors="replace")
+            proc = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=45, errors="replace")
         except (subprocess.TimeoutExpired, OSError):
             return 0
     # Only report diagnostics located in the edited file; siblings are reported when they are edited.
