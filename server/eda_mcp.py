@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""eda-ops MCP server: RTL lint, synthesis QoR, simulation, STA and log/constraint analysis.
+"""eda-ops MCP server: RTL lint, synthesis QoR, simulation, STA, log/constraint analysis and EDA docs search.
 
 Runs over stdio. Relative paths resolve against EDAOPS_PROJECT_DIR, else CLAUDE_PROJECT_DIR, else cwd.
 """
@@ -17,7 +17,7 @@ try:  # mcp >= 2.0
 except ImportError:  # mcp 1.x
     from mcp.server.fastmcp import FastMCP
 
-from edaops import __version__, flows, lint, logs, runner, sdc, timing
+from edaops import __version__, docs, flows, lint, logs, runner, sdc, timing
 
 mcp = FastMCP("eda-ops")
 
@@ -45,8 +45,10 @@ def _sources(files: list[str] | str | None, filelist: str | None,
 @mcp.tool()
 def eda_tool_status() -> dict:
     """Report which EDA tools (verilator, iverilog, yosys, OpenSTA, OpenROAD, verible, slang) are installed
-    and where. Call this first when unsure what the environment can run."""
-    return {"version": __version__, "project_dir": str(_base()), "tools": runner.tool_status()}
+    and where, plus whether the OpenROAD/Yosys/OpenSTA documentation index is available.
+    Call this first when unsure what the environment can run."""
+    return {"version": __version__, "project_dir": str(_base()), "tools": runner.tool_status(),
+            "docs_index": docs.status()}
 
 
 @mcp.tool()
@@ -129,6 +131,18 @@ def review_sdc(path: str) -> dict:
     missing I/O delays, uncertainty, driving cells/loads, risky false paths, multicycle setup/hold pairing,
     and clock-group intent. Returns findings with line numbers and suggested fixes."""
     return sdc.review(_path(path))
+
+
+@mcp.tool()
+def search_eda_docs(query: str, tools: list[str] | None = None, k: int = 5, mode: str = "auto") -> dict:
+    """Search the OpenROAD, Yosys and OpenSTA documentation (eda-rag index) and return the most relevant
+    passages with tool, file path, section heading and a GitHub URL. Use it for questions about commands,
+    options, defaults, Tcl/SDC syntax and error codes (e.g. 'repair_design -max_fanout', 'GRT-0116').
+    Include exact command/option names in the query when known. tools restricts the search to any of
+    'openroad', 'yosys', 'opensta'. k: passages to return (1-20). mode: 'auto' (hybrid + rerank when the
+    dense index and models are available, else BM25), 'bm25', 'hybrid' or 'hybrid_rerank'.
+    Answer only from the returned passages and cite their URLs; if they do not contain the answer, say so."""
+    return docs.search(query, k=k, tools=tools, mode=mode)
 
 
 if __name__ == "__main__":

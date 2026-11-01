@@ -4,6 +4,7 @@ Run:  python -m pytest -q tests
 """
 
 import gzip
+import json
 import sys
 from pathlib import Path
 
@@ -206,3 +207,68 @@ def test_sim_fifo_passes():
     r = flows.simulate([str(EX / "rtl/sync_fifo.sv"), str(EX / "rtl/tb_sync_fifo.sv")], "tb_sync_fifo",
                        tool="iverilog")
     assert r["verdict"] == "PASS", r.get("output")
+
+
+# ------------------------------------------------------------------ docs search
+DOC_CHUNKS = [
+    {"tool": "openroad", "source": "docs", "path": "src/rsz/README.md", "section": "Repair Design",
+     "url": "https://github.com/The-OpenROAD-Project/OpenROAD/blob/HEAD/src/rsz/README.md",
+     "text": "repair_design inserts buffers on nets to repair max slew, max capacitance and max fanout "
+             "violations. Use -max_fanout to override the fanout limit. If no limit is set it uses a "
+             "default limit of 50 load pins."},
+    {"tool": "yosys", "source": "docs", "path": "docs/source/cmd/flatten.rst", "section": "flatten",
+     "url": "https://github.com/YosysHQ/yosys/blob/HEAD/docs/source/cmd/flatten.rst",
+     "text": "flatten: this pass flattens the design by replacing cells by their implementation, "
+             "producing a single module without hierarchy."},
+    {"tool": "opensta", "source": "docs", "path": "doc/OpenSTA.md", "section": "create_clock",
+     "url": "https://github.com/The-OpenROAD-Project/OpenSTA/blob/HEAD/doc/OpenSTA.md",
+     "text": "create_clock -period 10 clk1 defines a clock with a 10 ns period on port clk1."},
+]
+
+
+@pytest.fixture
+def doc_index(tmp_path, monkeypatch):
+    from edaops import docs
+    d = tmp_path / "data" / "index" / "struct"
+    d.mkdir(parents=True)
+    (d / "chunks.jsonl").write_text("\n".join(json.dumps(c) for c in DOC_CHUNKS) + "\n")
+    monkeypatch.setenv("EDAOPS_DOCS_INDEX", str(tmp_path))  # eda-rag root layout is accepted
+    return docs
+
+
+def test_docs_tokenize_keeps_identifiers():
+    from edaops import docs
+    toks = docs.tokenize("repair_design -max_fanout")
+    assert {"repair_design", "repair", "design", "max_fanout", "max", "fanout"} <= set(toks)
+
+
+def test_docs_search_identifier_and_paraphrase(doc_index):
+    r = doc_index.search("-max_fanout")
+    assert r["ok"] and r["mode"] == "bm25"
+    assert r["results"][0]["path"] == "src/rsz/README.md"
+    r = doc_index.search("command to make a single module without hierarchy")
+    assert r["results"][0]["tool"] == "yosys"
+
+
+def test_docs_search_tool_filter_and_validation(doc_index):
+    r = doc_index.search("clock period", tools=["opensta"])
+    assert [x["tool"] for x in r["results"]] == ["opensta"]
+    assert not doc_index.search("x", tools=["vivado"])["ok"]
+    assert not doc_index.search("   ")["ok"]
+    assert not doc_index.search("x", mode="magic")["ok"]
+
+
+def test_docs_dense_falls_back_to_bm25(doc_index):
+    r = doc_index.search("max fanout", mode="hybrid_rerank")
+    assert r["ok"] and r["mode"] == "bm25" and "note" in r
+    s = doc_index.status()
+    assert s["available"] and s["passages"] == 3 and s["modes"] == ["bm25"]
+
+
+def test_docs_no_index(tmp_path, monkeypatch):
+    from edaops import docs
+    monkeypatch.setenv("EDAOPS_DOCS_INDEX", str(tmp_path / "missing"))
+    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(tmp_path / "plugin-data"))
+    r = docs.search("anything")
+    assert not r["ok"] and "eda-rag" in r["error"]
+    assert docs.status()["available"] is False

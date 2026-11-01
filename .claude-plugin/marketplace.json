@@ -8,7 +8,7 @@
     {
       "name": "eda-ops",
       "source": "./",
-      "description": "EDA toolkit: RTL lint/review, CDC, Yosys QoR, simulation, OpenSTA timing, SDC review, EDA log triage."
+      "description": "EDA toolkit: RTL lint/review, CDC, Yosys QoR, simulation, OpenSTA timing, SDC review, EDA log triage, EDA docs search."
     }
   ],
   "metadata": {
