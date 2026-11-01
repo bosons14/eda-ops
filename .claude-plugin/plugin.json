@@ -1,7 +1,7 @@
 {
   "name": "eda-ops",
-  "version": "0.1.3",
-  "description": "EDA toolkit for Claude Code: RTL lint and review, CDC checks, Yosys synthesis QoR, self-checking simulation, OpenSTA timing analysis, SDC/XDC review and large EDA log triage.",
+  "version": "0.2.0",
+  "description": "EDA toolkit for Claude Code: RTL lint and review, CDC checks, Yosys synthesis QoR, self-checking simulation, OpenSTA timing analysis, SDC/XDC review, large EDA log triage and OpenROAD/Yosys/OpenSTA documentation search.",
   "author": {
     "name": "Subhendra Basu",
     "url": "https://github.com/bosons14"

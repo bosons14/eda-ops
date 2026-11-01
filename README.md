@@ -19,6 +19,7 @@ Claude reasons from evidence instead of guessing from a wall of log text.
 | "Why did synthesis fail?" | Streams multi-GB (or `.gz`) logs from Vivado, DC, Genus, Innovus, OpenROAD, Questa, Xcelium, VCS, Verilator, UVM, Yosys: groups by message ID, finds the first error and flags crashes, OOM, licence and disk problems |
 | "How big is this? Did my change help?" | Yosys synthesis QoR: cells, area (with a liberty file), sequential cells, inferred latches, multi-drivers, variant comparison |
 | "Write a testbench for this" | Builds self-checking testbenches and runs them with Icarus or Verilator to a PASS/FAIL verdict |
+| "What does `-max_fanout` do in `repair_design`?" | Searches the OpenROAD, Yosys and OpenSTA documentation (an [eda-rag](https://github.com/bosons14/eda-rag) index) and answers from the passages with GitHub links, instead of from memory |
 
 It also lints automatically: whenever Claude edits a `.v`/`.sv` file, a hook lints that file and
 feeds real issues straight back, so Claude fixes latches and width bugs in the same turn.
@@ -26,9 +27,9 @@ feeds real issues straight back, so Claude fixes latches and width bugs in the s
 ## Components
 
 **MCP server `eda-ops`** (Python, stdio): `eda_tool_status`, `lint_rtl`, `synthesize`, `simulate`,
-`parse_timing_report`, `run_sta`, `triage_log`, `grep_log`, `review_sdc`.
+`parse_timing_report`, `run_sta`, `triage_log`, `grep_log`, `review_sdc`, `search_eda_docs`.
 
-**Skills**: `rtl-review`, `timing-closure`, `sdc-review`, `eda-log-triage`, `synthesis-qor`, `rtl-testbench`.
+**Skills**: `rtl-review`, `timing-closure`, `sdc-review`, `eda-log-triage`, `synthesis-qor`, `rtl-testbench`, `eda-docs`.
 Each one triggers from natural requests and can also be run as a slash command, e.g. `/eda-ops:timing-closure`.
 
 **Agents**: `rtl-reviewer` (an independent pre-merge reviewer) and `timing-closure-engineer` (multi-report,
@@ -53,6 +54,26 @@ need no tools at all:
 
 Ask Claude to "check which EDA tools are available" to see what was detected.
 
+### Documentation search (optional)
+
+`search_eda_docs` retrieves passages from the OpenROAD, Yosys and OpenSTA docs; Claude writes the answer
+and cites the links, so no LLM API key is needed. Build the index once with
+[eda-rag](https://github.com/bosons14/eda-rag) and point eda-ops at it:
+
+```bash
+git clone https://github.com/bosons14/eda-rag && cd eda-rag
+pip install rank_bm25 requests numpy
+python 01_ingest.py && python 02_chunk.py && python 03_index.py --chunks struct --no-dense
+export EDAOPS_DOCS_INDEX=$PWD        # set before starting Claude Code
+```
+
+That gives keyword search (BM25), which is exact on command names, options and message IDs and needs no
+extra packages. For semantic search plus cross-encoder reranking (better on paraphrased questions),
+build without `--no-dense` (needs `sentence-transformers` and `faiss-cpu`) and set `EDAOPS_DOCS_DENSE=1`:
+eda-ops then installs those into its own environment on first launch (PyTorch, about 2 GB).
+Alternatively run the server with the eda-rag Python: `EDAOPS_NO_UV=1 EDAOPS_PYTHON=/path/to/eda-rag/.venv/bin/python`
+(that environment also needs `pip install mcp`).
+
 ### Environment variables
 
 | Variable | Purpose |
@@ -62,6 +83,8 @@ Ask Claude to "check which EDA tools are available" to see what was detected.
 | `EDAOPS_PYTHON` | Python interpreter to use when uv is not installed |
 | `EDAOPS_HOOK_DISABLE=1` | Turn off lint-on-edit |
 | `EDAOPS_HOOK_FLAGS` | Extra Verilator flags for the hook (e.g. `-Wno-WIDTH`) |
+| `EDAOPS_DOCS_INDEX` | eda-rag checkout or index folder for `search_eda_docs` (default `~/.cache/eda-ops/docs-index`) |
+| `EDAOPS_DOCS_DENSE=1` | Install and use semantic search + reranking for `search_eda_docs` |
 
 ## Try it
 
@@ -74,6 +97,7 @@ and ask:
 - "Review examples/constraints/top.sdc"
 - "Why did examples/reports/vivado_synth.log fail?"
 - "Is the CDC in examples/rtl/cdc_bad.sv safe?"
+- "How do I stop the resizer from buffering beyond a fanout limit?" (needs the docs index)
 
 ## Troubleshooting
 

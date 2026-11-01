@@ -5,8 +5,14 @@
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SERVER="$HERE/eda_mcp.py"
 log() { echo "eda-ops: $*" >&2; }
+# EDAOPS_DOCS_DENSE=1 adds semantic search + reranking to search_eda_docs (pulls in PyTorch, ~2 GB).
+# Without it docs search is keyword-only (BM25) and needs nothing extra.
+DENSE_PKGS="sentence-transformers faiss-cpu"
 
 if [ -z "$EDAOPS_NO_UV" ] && command -v uv >/dev/null 2>&1; then
+  if [ -n "$EDAOPS_DOCS_DENSE" ]; then
+    exec uv run --quiet --no-project --with "mcp>=1.2,<3" --with sentence-transformers --with faiss-cpu python "$SERVER"
+  fi
   exec uv run --quiet --no-project --with "mcp>=1.2,<3" python "$SERVER"
 fi
 
@@ -40,5 +46,10 @@ if [ ! -x "$VPY" ] || ! "$VPY" -c "import mcp" >/dev/null 2>&1; then
   VPY="$VENV/bin/python"; [ -x "$VENV/Scripts/python.exe" ] && VPY="$VENV/Scripts/python.exe"
   "$VPY" -m pip install -q --disable-pip-version-check "mcp>=1.2,<3" >&2 || {
     rm -rf "$VENV"; log "pip install mcp failed (offline or behind a proxy?)"; exit 1; }
+fi
+if [ -n "$EDAOPS_DOCS_DENSE" ] && ! "$VPY" -c "import faiss, sentence_transformers" >/dev/null 2>&1; then
+  log "EDAOPS_DOCS_DENSE set: installing $DENSE_PKGS into $VENV (one time, a few minutes)"
+  # shellcheck disable=SC2086
+  "$VPY" -m pip install -q --disable-pip-version-check $DENSE_PKGS >&2 || log "dense install failed; docs search stays keyword-only"
 fi
 exec "$VPY" "$SERVER"
